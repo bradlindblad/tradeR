@@ -1,8 +1,8 @@
 
 library(dtplyr)
 library(tidyverse)
-# library(quantmod)
-# library(TTR)
+library(quantmod)
+library(TTR)
 library(tidyquant)
 library(lubridate)
 # library(alphavantager)
@@ -60,15 +60,29 @@ date.6mo.ago <- lubridate::today() - 30.42 * 6
 # from <- "2017-01-01"
 # to   <- today()
 # Series
-biotech <- my.symbols$symbol %>%
+biotech <- my.symbols$symbol[1:8] %>%
   tq_get(get = "stock.prices",
          from = date.6mo.ago,
-         to = lubridate::today()) %>%
-  dtplyr::tbl_dt()
+         to = lubridate::today())
+
+# Mutate and get a MACD
+with.macd <- biotech %>%
+  dplyr::group_by(symbol) %>%
+  tidyquant::tq_mutate(select = close,
+                       mutate_fun = MACD,
+                       nFast = 12,
+                       nSlow = 20,
+                       nSig = 15,
+                       maType = SMA)
+
+ggplot(with.macd) +
+  geom_line(aes(date, close)) +
+  geom_line(aes(date, macd), color = 'blue') +
+  facet_wrap(~ symbol)
 
 
 
-#
+
 #
 # input <- test.symbols$symbol
 #
